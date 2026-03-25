@@ -1,0 +1,40 @@
+class Solution {
+    public boolean canPartitionGrid(int[][] grid) {
+        int m = grid.length;
+        int n = grid[0].length;
+
+        long total = 0;
+
+        // Step 1: total sum
+        for (int[] row : grid) {
+            for (int val : row) {
+                total += val;
+            }
+        }
+
+        // Step 2: if odd → impossible
+        if (total % 2 != 0) return false;
+
+        long target = total / 2;
+
+        // Step 3: horizontal cuts (must leave bottom non-empty)
+        long sum = 0;
+        for (int i = 0; i < m - 1; i++) {
+            for (int j = 0; j < n; j++) {
+                sum += grid[i][j];
+            }
+            if (sum == target) return true;
+        }
+
+        // Step 4: vertical cuts (must leave right non-empty)
+        sum = 0;
+        for (int j = 0; j < n - 1; j++) {
+            for (int i = 0; i < m; i++) {
+                sum += grid[i][j];
+            }
+            if (sum == target) return true;
+        }
+
+        return false;
+    }
+}
