@@ -1,0 +1,58 @@
+class Robot {
+    int width, height;
+    int x, y;
+    int dir; // 0 = East, 1 = North, 2 = West, 3 = South
+
+    String[] directions = {"East", "North", "West", "South"};
+    int perimeter;
+    int stepsTaken;
+
+    public Robot(int width, int height) {
+        this.width = width;
+        this.height = height;
+        this.x = 0;
+        this.y = 0;
+        this.dir = 0;
+        this.perimeter = 2 * (width + height) - 4;
+        this.stepsTaken = 0;
+    }
+    
+    public void step(int num) {
+        stepsTaken = (stepsTaken + num) % perimeter;
+        
+        int steps = stepsTaken;
+        
+        if (steps == 0) {
+            x = 0;
+            y = 0;
+            dir = 3; // South (special case)
+            return;
+        }
+        
+        if (steps <= width - 1) {
+            x = steps;
+            y = 0;
+            dir = 0;
+        } else if (steps <= width - 1 + height - 1) {
+            x = width - 1;
+            y = steps - (width - 1);
+            dir = 1;
+        } else if (steps <= width - 1 + height - 1 + width - 1) {
+            x = width - 1 - (steps - (width - 1 + height - 1));
+            y = height - 1;
+            dir = 2;
+        } else {
+            x = 0;
+            y = height - 1 - (steps - (2 * (width - 1) + height - 1));
+            dir = 3;
+        }
+    }
+    
+    public int[] getPos() {
+        return new int[]{x, y};
+    }
+    
+    public String getDir() {
+        return directions[dir];
+    }
+}
