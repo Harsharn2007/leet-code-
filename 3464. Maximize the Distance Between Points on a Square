@@ -1,0 +1,100 @@
+import java.util.*;
+
+class Solution {
+    public int maxDistance(int side, int[][] points, int k) {
+        // Convert each point to perimeter position [0, 4*side)
+        // Bottom: (0,0)->(side,0): pos = x
+        // Right:  (side,0)->(side,side): pos = side + y
+        // Top:    (side,side)->(0,side): pos = 2*side + (side - x)
+        // Left:   (0,side)->(0,0): pos = 3*side + (side - y)
+        
+        int n = points.length;
+        long[] pos = new long[n];
+        
+        for (int i = 0; i < n; i++) {
+            pos[i] = toPerimeter(points[i][0], points[i][1], side);
+        }
+        
+        Arrays.sort(pos);
+        
+        // Binary search on the answer
+        long lo = 1, hi = 2L * side, ans = 0;
+        
+        while (lo <= hi) {
+            long mid = (lo + hi) / 2;
+            if (canPlace(pos, k, mid, side)) {
+                ans = mid;
+                lo = mid + 1;
+            } else {
+                hi = mid - 1;
+            }
+        }
+        
+        return (int) ans;
+    }
+    
+    private long toPerimeter(int x, int y, int side) {
+        if (y == 0) return x;                          // bottom
+        if (x == side) return side + y;               // right
+        if (y == side) return 2L * side + (side - x); // top
+        return 3L * side + (side - y);                // left (x == 0)
+    }
+    
+    // Check if we can place k points with min Manhattan distance >= d
+    // Try each point as starting point
+    private boolean canPlace(long[] pos, int k, long d, int side) {
+        int n = pos.length;
+        long perimeter = 4L * side;
+        
+        // Try starting from each point
+        for (int start = 0; start < n; start++) {
+            int count = 1;
+            long cur = pos[start];
+            long startPos = pos[start];
+            int idx = start;
+            
+            while (count < k) {
+                // Find next point with perimeter distance >= d from cur
+                long need = cur + d;
+                // Binary search for first pos >= need in circular array
+                idx = lowerBound(pos, idx + 1, n, need);
+                
+                if (idx == -1) break; // no more points in this direction
+                
+                // Check if adding this point still allows wrapping back
+                // The last point must be within (perimeter - d) from startPos
+                // i.e., pos[idx] <= startPos + perimeter - d
+                if (count == k - 1) {
+                    // This is the last point we need
+                    // Check wrap-around: Manhattan dist from pos[idx] back to startPos
+                    long distBack = (startPos + perimeter) - pos[idx];
+                    if (distBack >= d) {
+                        return true;
+                    } else {
+                        break;
+                    }
+                }
+                
+                cur = pos[idx];
+                count++;
+            }
+        }
+        return false;
+    }
+    
+    // Find first index in pos[from..n-1] where pos[i] >= target
+    // Returns -1 if not found
+    private int lowerBound(long[] pos, int from, int n, long target) {
+        int lo = from, hi = n - 1, res = -1;
+        while (lo <= hi) {
+            int mid = (lo + hi) / 2;
+            if (pos[mid] >= target) {
+                res = mid;
+                hi = mid - 1;
+            } else {
+                lo = mid + 1;
+            }
+        }
+        return res;
+    }
+}
