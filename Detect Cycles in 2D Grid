@@ -1,0 +1,41 @@
+class Solution {
+    public boolean containsCycle(char[][] grid) {
+        int n = grid.length, m = grid[0].length;
+        boolean[][] vis = new boolean[n][m];
+        
+        for (int i = 0; i < n; i++) {
+            for (int j = 0; j < m; j++) {
+                if (!vis[i][j]) {
+                    if (dfs(grid, vis, i, j, -1, -1, grid[i][j])) {
+                        return true;
+                    }
+                }
+            }
+        }
+        return false;
+    }
+    
+    private boolean dfs(char[][] grid, boolean[][] vis, int x, int y, int px, int py, char ch) {
+        int n = grid.length, m = grid[0].length;
+        
+        vis[x][y] = true;
+        
+        int[] dx = {1, -1, 0, 0};
+        int[] dy = {0, 0, 1, -1};
+        
+        for (int d = 0; d < 4; d++) {
+            int nx = x + dx[d];
+            int ny = y + dy[d];
+            
+            if (nx >= 0 && ny >= 0 && nx < n && ny < m && grid[nx][ny] == ch) {
+                if (nx == px && ny == py) continue;
+                
+                if (vis[nx][ny]) return true;
+                
+                if (dfs(grid, vis, nx, ny, x, y, ch)) return true;
+            }
+        }
+        
+        return false;
+    }
+}
