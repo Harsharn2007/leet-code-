@@ -1,0 +1,56 @@
+import java.util.*;
+
+class Solution {
+    public boolean hasValidPath(int[][] grid) {
+        int m = grid.length, n = grid[0].length;
+
+        // Directions: up, down, left, right
+        int[][] dirs = {{-1,0},{1,0},{0,-1},{0,1}};
+
+        // Allowed directions for each street type
+        int[][][] street = {
+            {},
+            {{0,2},{0,3}},        // 1: left, right
+            {{1,0},{1,1}},        // 2: up, down
+            {{0,2},{1,1}},        // 3: left, down
+            {{0,3},{1,1}},        // 4: right, down
+            {{0,2},{1,0}},        // 5: left, up
+            {{0,3},{1,0}}         // 6: right, up
+        };
+
+        boolean[][] visited = new boolean[m][n];
+        Queue<int[]> q = new LinkedList<>();
+        q.offer(new int[]{0, 0});
+        visited[0][0] = true;
+
+        while (!q.isEmpty()) {
+            int[] curr = q.poll();
+            int r = curr[0], c = curr[1];
+
+            if (r == m - 1 && c == n - 1) return true;
+
+            int type = grid[r][c];
+
+            for (int[] move : street[type]) {
+                int dirIndex = (move[0] == 0) ? (move[1] == 2 ? 2 : 3) : (move[1] == 0 ? 0 : 1);
+                int nr = r + dirs[dirIndex][0];
+                int nc = c + dirs[dirIndex][1];
+
+                if (nr < 0 || nc < 0 || nr >= m || nc >= n || visited[nr][nc]) continue;
+
+                // Check if neighbor connects back
+                int nextType = grid[nr][nc];
+                for (int[] back : street[nextType]) {
+                    int backDir = (back[0] == 0) ? (back[1] == 2 ? 2 : 3) : (back[1] == 0 ? 0 : 1);
+                    if (nr + dirs[backDir][0] == r && nc + dirs[backDir][1] == c) {
+                        visited[nr][nc] = true;
+                        q.offer(new int[]{nr, nc});
+                        break;
+                    }
+                }
+            }
+        }
+
+        return false;
+    }
+}
