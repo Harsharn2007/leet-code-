@@ -1,0 +1,74 @@
+class Solution {
+    public long maximumScore(int[][] grid) {
+        int n = grid.length;
+
+        // prefix[j][i] = sum of grid[0..i-1][j]
+        long[][] prefix = new long[n][n + 1];
+        for (int j = 0; j < n; j++)
+            for (int i = 0; i < n; i++)
+                prefix[j][i + 1] = prefix[j][i] + grid[i][j];
+
+        final long NEG = Long.MIN_VALUE / 2;
+
+        // dp[hp][hc] = best score where previous col has black height hp,
+        //              current col j has black height hc.
+        // We use hp=0 as sentinel for "no left neighbor" at col 0.
+        long[][] dp = new long[n + 1][n + 1];
+        for (long[] row : dp) java.util.Arrays.fill(row, NEG);
+        for (int hc = 0; hc <= n; hc++) dp[0][hc] = 0;
+
+        for (int j = 0; j < n - 1; j++) {
+            long[][] ndp = new long[n + 1][n + 1];
+            for (long[] row : ndp) java.util.Arrays.fill(row, NEG);
+            long[] pj  = prefix[j];
+            long[] pj1 = prefix[j + 1];
+
+            for (int hc = 0; hc <= n; hc++) {
+                // Group 1 max: max dp[hp][hc] for hp in [0..hc]
+                long g1Max = NEG;
+                for (int hp = 0; hp <= hc; hp++)
+                    if (dp[hp][hc] != NEG) g1Max = Math.max(g1Max, dp[hp][hc]);
+
+                // Suffix max: suf[k] = max dp[hp][hc] for hp in [k..n]
+                long[] suf = new long[n + 2];
+                java.util.Arrays.fill(suf, NEG);
+                for (int hp = n; hp >= 0; hp--)
+                    suf[hp] = (dp[hp][hc] != NEG)
+                        ? Math.max(suf[hp + 1], dp[hp][hc])
+                        : suf[hp + 1];
+
+                // Iterate hn with running max for group 2
+                long run2 = NEG; // max dp[hp][hc]-pj[hp] for hp in [hc+1..hn-1]
+
+                for (int hn = 0; hn <= n; hn++) {
+                    long g2 = (hc > hn) ? pj1[hc] - pj1[hn] : 0;
+
+                    // Group 1: hp in [0..hc], g1 = pj[hn]-pj[hc] if hn>hc else 0
+                    if (g1Max != NEG) {
+                        long g1 = (hn > hc) ? pj[hn] - pj[hc] : 0;
+                        ndp[hc][hn] = Math.max(ndp[hc][hn], g1Max + g1 + g2);
+                    }
+
+                    // Group 2: hp in [hc+1..hn-1], g1 = pj[hn]-pj[hp]
+                    if (run2 != NEG)
+                        ndp[hc][hn] = Math.max(ndp[hc][hn], pj[hn] + run2 + g2);
+
+                    // Group 3: hp in [hn..n], g1 = 0
+                    if (suf[hn] != NEG)
+                        ndp[hc][hn] = Math.max(ndp[hc][hn], suf[hn] + g2);
+
+                    // Extend run2 to include hp=hn (available for hn+1 and beyond)
+                    if (hn > hc && dp[hn][hc] != NEG)
+                        run2 = Math.max(run2, dp[hn][hc] - pj[hn]);
+                }
+            }
+            dp = ndp;
+        }
+
+        long ans = 0;
+        for (long[] row : dp)
+            for (long v : row)
+                if (v != NEG) ans = Math.max(ans, v);
+        return ans;
+    }
+}
