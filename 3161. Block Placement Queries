@@ -1,0 +1,85 @@
+import java.util.*;
+
+class Solution {
+
+    class FenwickTree {
+        int[] bit;
+
+        FenwickTree(int n) {
+            bit = new int[n + 1];
+        }
+
+        void update(int idx, int val) {
+            while (idx < bit.length) {
+                bit[idx] = Math.max(bit[idx], val);
+                idx += idx & -idx;
+            }
+        }
+
+        int query(int idx) {
+            int res = 0;
+            while (idx > 0) {
+                res = Math.max(res, bit[idx]);
+                idx -= idx & -idx;
+            }
+            return res;
+        }
+    }
+
+    public List<Boolean> getResults(int[][] queries) {
+        int n = Math.min(50000, queries.length * 3);
+
+        List<Boolean> ans = new ArrayList<>();
+        FenwickTree tree = new FenwickTree(n + 1);
+
+        TreeSet<Integer> obstacles = new TreeSet<>();
+        obstacles.add(0);
+        obstacles.add(n);
+
+        for (int[] q : queries) {
+            if (q[0] == 1) {
+                obstacles.add(q[1]);
+            }
+        }
+
+        Integer prev = null;
+        for (int x : obstacles) {
+            if (prev != null) {
+                tree.update(x, x - prev);
+            }
+            prev = x;
+        }
+
+        for (int i = queries.length - 1; i >= 0; i--) {
+            int[] q = queries[i];
+
+            if (q[0] == 1) {
+                int x = q[1];
+
+                Integer next = obstacles.higher(x);
+                Integer pre = obstacles.lower(x);
+
+                if (next != null) {
+                    tree.update(next, next - pre);
+                }
+
+                obstacles.remove(x);
+
+            } else {
+                int x = q[1];
+                int size = q[2];
+
+                Integer pre = obstacles.lower(x);
+
+                boolean possible =
+                        (x - pre >= size) ||
+                        (tree.query(pre) >= size);
+
+                ans.add(possible);
+            }
+        }
+
+        Collections.reverse(ans);
+        return ans;
+    }
+}
