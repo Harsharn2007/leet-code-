@@ -1,0 +1,76 @@
+import java.util.*;
+
+class Solution {
+    public int earliestFinishTime(int[] landStartTime, int[] landDuration,
+                                  int[] waterStartTime, int[] waterDuration) {
+
+        int n = landStartTime.length;
+        int m = waterStartTime.length;
+
+        int[] landEnd = new int[n];
+        int[] waterEnd = new int[m];
+
+        int minLandEnd = Integer.MAX_VALUE;
+        int minWaterEnd = Integer.MAX_VALUE;
+
+        for (int i = 0; i < n; i++) {
+            landEnd[i] = landStartTime[i] + landDuration[i];
+            minLandEnd = Math.min(minLandEnd, landEnd[i]);
+        }
+
+        for (int j = 0; j < m; j++) {
+            waterEnd[j] = waterStartTime[j] + waterDuration[j];
+            minWaterEnd = Math.min(minWaterEnd, waterEnd[j]);
+        }
+
+        Arrays.sort(landEnd);
+        Arrays.sort(waterEnd);
+
+        long ans = Long.MAX_VALUE;
+
+        // Land -> Water
+        for (int j = 0; j < m; j++) {
+            int open = waterStartTime[j];
+
+            long earliestLandFinish;
+            if (minLandEnd <= open) {
+                earliestLandFinish = open;
+            } else {
+                int idx = lowerBound(landEnd, open);
+                earliestLandFinish = landEnd[idx];
+            }
+
+            ans = Math.min(ans, earliestLandFinish + waterDuration[j]);
+        }
+
+        // Water -> Land
+        for (int i = 0; i < n; i++) {
+            int open = landStartTime[i];
+
+            long earliestWaterFinish;
+            if (minWaterEnd <= open) {
+                earliestWaterFinish = open;
+            } else {
+                int idx = lowerBound(waterEnd, open);
+                earliestWaterFinish = waterEnd[idx];
+            }
+
+            ans = Math.min(ans, earliestWaterFinish + landDuration[i]);
+        }
+
+        return (int) ans;
+    }
+
+    private int lowerBound(int[] arr, int target) {
+        int l = 0, r = arr.length;
+        while (l < r) {
+            int mid = l + (r - l) / 2;
+            if (arr[mid] < target) {
+                l = mid + 1;
+            } else {
+                r = mid;
+            }
+        }
+        return l;
+    }
+}
