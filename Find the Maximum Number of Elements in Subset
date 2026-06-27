@@ -1,0 +1,35 @@
+import java.util.HashMap;
+import java.util.Map;
+
+class Solution {
+    public int maximumLength(int[] nums) {
+        Map<Long, Integer> cnt = new HashMap<>();
+
+        for (int x : nums) {
+            cnt.put((long) x, cnt.getOrDefault((long) x, 0) + 1);
+        }
+
+        int ans = 0;
+
+        // Handle 1 separately
+        if (cnt.containsKey(1L)) {
+            int ones = cnt.remove(1L);
+            ans = ones - ((ones % 2 == 0) ? 1 : 0);
+        }
+
+        for (long x : cnt.keySet()) {
+            long cur = x;
+            int len = 0;
+
+            while (cnt.getOrDefault(cur, 0) > 1) {
+                len += 2;
+                cur = cur * cur;
+            }
+
+            len += cnt.getOrDefault(cur, -1);
+            ans = Math.max(ans, len);
+        }
+
+        return ans;
+    }
+}
