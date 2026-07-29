@@ -1,0 +1,46 @@
+from collections import Counter
+from math import factorial
+
+class Solution:
+    def smallestPalindrome(self, s, k):
+        cnt = Counter(s)
+        odd_char = ''
+        half_counts = [0] * 26
+        for i in range(26):
+            c = chr(ord('a') + i)
+            v = cnt.get(c, 0)
+            if v % 2 == 1:
+                odd_char = c
+            half_counts[i] = v // 2
+
+        half_len = sum(half_counts)
+
+        M0 = factorial(half_len)
+        for v in half_counts:
+            if v > 1:
+                M0 //= factorial(v)
+
+        if k > M0:
+            return ""
+
+        remaining_length = half_len
+        M = M0
+        counts = half_counts[:]
+        result = []
+
+        for _ in range(half_len):
+            for i in range(26):
+                if counts[i] == 0:
+                    continue
+                Mp = M * counts[i] // remaining_length
+                if k <= Mp:
+                    result.append(chr(ord('a') + i))
+                    counts[i] -= 1
+                    remaining_length -= 1
+                    M = Mp
+                    break
+                else:
+                    k -= Mp
+
+        half_str = ''.join(result)
+        return half_str + odd_char + half_str[::-1]
