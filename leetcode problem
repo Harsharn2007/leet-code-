@@ -1,0 +1,49 @@
+class Solution:
+    def stoneGameV(self, stoneValue):
+        n = len(stoneValue)
+        prefix = [0] * (n + 1)
+        for i in range(n):
+            prefix[i + 1] = prefix[i] + stoneValue[i]
+
+        def s(i, j):  # sum of stoneValue[i..j]
+            return prefix[j + 1] - prefix[i]
+
+        dp = [[0] * n for _ in range(n)]
+        LM = [[0] * n for _ in range(n)]  # LM[i][k] = max over k'=i..k of (s(i,k') + dp[i][k'])
+        RM = [[0] * n for _ in range(n)]  # RM[j][t] = max over t'=t..j of (s(t',j) + dp[t'][j])
+
+        NEG = float('-inf')
+
+        # base case: length 1 intervals
+        for i in range(n):
+            LM[i][i] = stoneValue[i]
+            RM[i][i] = stoneValue[i]
+
+        for length in range(2, n + 1):
+            for i in range(0, n - length + 1):
+                j = i + length - 1
+                total = s(i, j)
+
+                # binary search: largest k in [i, j-1] with 2*s(i,k) <= total
+                lo, hi, k0 = i, j - 1, i - 1
+                while lo <= hi:
+                    mid = (lo + hi) // 2
+                    if 2 * s(i, mid) <= total:
+                        k0 = mid
+                        lo = mid + 1
+                    else:
+                        hi = mid - 1
+
+                best = 0
+                if k0 >= i:
+                    best = max(best, LM[i][k0])
+                    if 2 * s(i, k0) == total:
+                        best = max(best, s(i, k0) + dp[k0 + 1][j])
+                if k0 + 2 <= j:
+                    best = max(best, RM[j][k0 + 2])
+
+                dp[i][j] = best
+                LM[i][j] = max(LM[i][j - 1], s(i, j) + dp[i][j])
+                RM[j][i] = max(RM[j][i + 1], s(i, j) + dp[i][j])
+
+        return dp[0][n - 1]
