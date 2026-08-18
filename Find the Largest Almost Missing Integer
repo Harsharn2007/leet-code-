@@ -1,0 +1,20 @@
+class Solution:
+    def largestInteger(self, nums, k):
+        count = {}
+
+        # Check every subarray of size k
+        for i in range(len(nums) - k + 1):
+            window = set(nums[i:i + k])
+
+            # Count each number once per subarray
+            for x in window:
+                count[x] = count.get(x, 0) + 1
+
+        # Find the largest number appearing in exactly one subarray
+        answer = -1
+
+        for x, freq in count.items():
+            if freq == 1:
+                answer = max(answer, x)
+
+        return answer
