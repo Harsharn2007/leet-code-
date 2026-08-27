@@ -1,0 +1,101 @@
+class Solution {
+    public String lexGreaterPermutation(String s, String target) {
+        int n = s.length();
+
+        int[] freq = new int[26];
+
+        for (char c : s.toCharArray()) {
+            freq[c - 'a']++;
+        }
+
+        char[] prefix = new char[n];
+
+        for (int i = 0; i < n; i++) {
+            int t = target.charAt(i) - 'a';
+
+            // Try to keep the prefix equal to target
+            if (freq[t] > 0) {
+                prefix[i] = target.charAt(i);
+                freq[t]--;
+                continue;
+            }
+
+            // Try to make current position greater
+            int greater = findGreater(freq, t);
+
+            if (greater != -1) {
+                return buildAnswer(prefix, i, greater, freq);
+            }
+
+            // Cannot continue, so backtrack
+            for (int j = i - 1; j >= 0; j--) {
+                int oldChar = prefix[j] - 'a';
+
+                // Put the previously used character back
+                freq[oldChar]++;
+
+                int greaterPrev = findGreater(freq, oldChar);
+
+                if (greaterPrev != -1) {
+                    return buildAnswer(prefix, j, greaterPrev, freq);
+                }
+            }
+
+            return "";
+        }
+
+        // target itself can be formed.
+        // Find the next greater permutation.
+        for (int j = n - 1; j >= 0; j--) {
+            int oldChar = prefix[j] - 'a';
+
+            freq[oldChar]++;
+
+            int greater = findGreater(freq, oldChar);
+
+            if (greater != -1) {
+                return buildAnswer(prefix, j, greater, freq);
+            }
+        }
+
+        return "";
+    }
+
+    private int findGreater(int[] freq, int c) {
+        for (int x = c + 1; x < 26; x++) {
+            if (freq[x] > 0) {
+                return x;
+            }
+        }
+
+        return -1;
+    }
+
+    private String buildAnswer(
+            char[] prefix,
+            int position,
+            int greater,
+            int[] freq) {
+
+        StringBuilder result = new StringBuilder();
+
+        // Keep everything before position unchanged
+        for (int i = 0; i < position; i++) {
+            result.append(prefix[i]);
+        }
+
+        // Put the smallest possible greater character
+        result.append((char) ('a' + greater));
+        freq[greater]--;
+
+        // Put remaining characters in sorted order
+        for (int c = 0; c < 26; c++) {
+            while (freq[c] > 0) {
+                result.append((char) ('a' + c));
+                freq[c]--;
+            }
+        }
+
+        return result.toString();
+    }
+}
