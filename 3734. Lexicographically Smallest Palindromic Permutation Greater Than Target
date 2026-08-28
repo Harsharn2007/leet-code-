@@ -1,0 +1,167 @@
+class Solution {
+
+    public String lexPalindromicPermutation(String s, String target) {
+
+        int n = s.length();
+
+        // Count characters
+        int[] count = new int[26];
+
+        for (char c : s.toCharArray()) {
+            count[c - 'a']++;
+        }
+
+        // Check if palindrome is possible
+        int oddCount = 0;
+        char middle = 0;
+
+        for (int i = 0; i < 26; i++) {
+            if (count[i] % 2 == 1) {
+                oddCount++;
+                middle = (char) ('a' + i);
+            }
+        }
+
+        if (oddCount > 1) {
+            return "";
+        }
+
+        // Build frequency of first half
+        int halfLen = n / 2;
+        int[] halfCount = new int[26];
+
+        for (int i = 0; i < 26; i++) {
+            halfCount[i] = count[i] / 2;
+        }
+
+        /*
+         * STEP 1:
+         * Try to make the first half exactly equal
+         * to target's first half.
+         *
+         * The COMPLETE palindrome is then compared
+         * with target.
+         */
+        char[] half = new char[halfLen];
+        int[] temp = halfCount.clone();
+
+        boolean possible = true;
+
+        for (int i = 0; i < halfLen; i++) {
+
+            int c = target.charAt(i) - 'a';
+
+            if (temp[c] == 0) {
+                possible = false;
+                break;
+            }
+
+            half[i] = target.charAt(i);
+            temp[c]--;
+        }
+
+        if (possible) {
+
+            String candidate = buildPalindrome(
+                half,
+                middle,
+                n
+            );
+
+            if (candidate.compareTo(target) > 0) {
+                return candidate;
+            }
+        }
+
+        /*
+         * STEP 2:
+         * If equal half does not work, find the rightmost
+         * position where we can choose a character greater
+         * than target.
+         *
+         * Then fill everything after it with the smallest
+         * possible characters.
+         */
+        for (int pivot = halfLen - 1; pivot >= 0; pivot--) {
+
+            temp = halfCount.clone();
+
+            boolean valid = true;
+
+            // Match target before pivot
+            for (int i = 0; i < pivot; i++) {
+
+                int c = target.charAt(i) - 'a';
+
+                if (temp[c] == 0) {
+                    valid = false;
+                    break;
+                }
+
+                half[i] = target.charAt(i);
+                temp[c]--;
+            }
+
+            if (!valid) {
+                continue;
+            }
+
+            int targetChar = target.charAt(pivot) - 'a';
+
+            // Try smallest character greater than target[pivot]
+            for (int c = targetChar + 1; c < 26; c++) {
+
+                if (temp[c] > 0) {
+
+                    half[pivot] = (char) ('a' + c);
+                    temp[c]--;
+
+                    // Fill remaining positions with smallest chars
+                    int pos = pivot + 1;
+
+                    for (int x = 0; x < 26; x++) {
+
+                        while (temp[x] > 0) {
+                            half[pos++] = (char) ('a' + x);
+                            temp[x]--;
+                        }
+                    }
+
+                    return buildPalindrome(
+                        half,
+                        middle,
+                        n
+                    );
+                }
+            }
+        }
+
+        return "";
+    }
+
+    private String buildPalindrome(
+        char[] half,
+        char middle,
+        int n
+    ) {
+
+        StringBuilder result = new StringBuilder();
+
+        // First half
+        for (char c : half) {
+            result.append(c);
+        }
+
+        // Middle character for odd length
+        if (n % 2 == 1) {
+            result.append(middle);
+        }
+
+        // Reverse of first half
+        for (int i = half.length - 1; i >= 0; i--) {
+            result.append(half[i]);
+        }
+
+        return result.toString();
+    }
+}
