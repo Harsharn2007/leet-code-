@@ -1,0 +1,58 @@
+class Solution {
+    public int[] nodesBetweenCriticalPoints(ListNode head) {
+
+        int[] result = {-1, -1};
+
+        ListNode prev = head;
+        ListNode curr = head.next;
+
+        int position = 1;
+
+        int first = -1;
+        int prevCritical = -1;
+
+        int minDistance = Integer.MAX_VALUE;
+        int maxDistance = -1;
+
+        while (curr.next != null) {
+
+            ListNode next = curr.next;
+
+            // Check for local maximum or local minimum
+            if ((curr.val > prev.val && curr.val > next.val) ||
+                (curr.val < prev.val && curr.val < next.val)) {
+
+                // First critical point
+                if (first == -1) {
+                    first = position;
+                } 
+                else {
+                    // Distance from previous critical point
+                    minDistance = Math.min(
+                        minDistance,
+                        position - prevCritical
+                    );
+
+                    // Distance from first critical point
+                    maxDistance = Math.max(
+                        maxDistance,
+                        position - first
+                    );
+                }
+
+                prevCritical = position;
+            }
+
+            prev = curr;
+            curr = next;
+            position++;
+        }
+
+        if (minDistance != Integer.MAX_VALUE) {
+            result[0] = minDistance;
+            result[1] = maxDistance;
+        }
+
+        return result;
+    }
+}
