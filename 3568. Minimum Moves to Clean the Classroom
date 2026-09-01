@@ -1,0 +1,179 @@
+import java.util.*;
+
+class Solution {
+
+    static class State {
+        int row;
+        int col;
+        int mask;
+        int energy;
+        int moves;
+
+        State(int row, int col, int mask, int energy, int moves) {
+            this.row = row;
+            this.col = col;
+            this.mask = mask;
+            this.energy = energy;
+            this.moves = moves;
+        }
+    }
+
+    public int minMoves(String[] classroom, int energy) {
+
+        int m = classroom.length;
+        int n = classroom[0].length();
+
+        int startRow = 0;
+        int startCol = 0;
+
+        // Store an ID for every litter cell
+        int[][] litterId = new int[m][n];
+
+        for (int i = 0; i < m; i++) {
+            Arrays.fill(litterId[i], -1);
+        }
+
+        int litterCount = 0;
+
+        // Find starting position and assign IDs to litter
+        for (int i = 0; i < m; i++) {
+            for (int j = 0; j < n; j++) {
+
+                char cell = classroom[i].charAt(j);
+
+                if (cell == 'S') {
+                    startRow = i;
+                    startCol = j;
+                }
+
+                if (cell == 'L') {
+                    litterId[i][j] = litterCount;
+                    litterCount++;
+                }
+            }
+        }
+
+        // If there is no litter
+        if (litterCount == 0) {
+            return 0;
+        }
+
+        // Example:
+        // 3 litter -> 2^3 = 8 possible masks
+        int totalMasks = 1 << litterCount;
+
+        // All litter collected
+        int allCollected = totalMasks - 1;
+
+        /*
+         * visited[row][col][mask][energy]
+         *
+         * row     = student's row
+         * col     = student's column
+         * mask    = which litter has been collected
+         * energy  = remaining energy
+         */
+        boolean[][][][] visited =
+                new boolean[m][n][totalMasks][energy + 1];
+
+        Queue<State> queue = new LinkedList<>();
+
+        // Initial state
+        queue.offer(
+                new State(
+                        startRow,
+                        startCol,
+                        0,
+                        energy,
+                        0
+                )
+        );
+
+        visited[startRow][startCol][0][energy] = true;
+
+        // Directions: up, down, left, right
+        int[] dr = {-1, 1, 0, 0};
+        int[] dc = {0, 0, -1, 1};
+
+        // BFS
+        while (!queue.isEmpty()) {
+
+            State current = queue.poll();
+
+            int row = current.row;
+            int col = current.col;
+            int mask = current.mask;
+            int currentEnergy = current.energy;
+            int moves = current.moves;
+
+            // If all litter is collected
+            if (mask == allCollected) {
+                return moves;
+            }
+
+            // Try all 4 directions
+            for (int d = 0; d < 4; d++) {
+
+                int newRow = row + dr[d];
+                int newCol = col + dc[d];
+
+                // Check boundaries
+                if (newRow < 0 || newRow >= m ||
+                    newCol < 0 || newCol >= n) {
+                    continue;
+                }
+
+                // Cannot move through obstacle
+                if (classroom[newRow].charAt(newCol) == 'X') {
+                    continue;
+                }
+
+                // Need energy to make a move
+                if (currentEnergy == 0) {
+                    continue;
+                }
+
+                // Moving costs 1 energy
+                int newEnergy = currentEnergy - 1;
+
+                // Copy current mask
+                int newMask = mask;
+
+                char nextCell = classroom[newRow].charAt(newCol);
+
+                // If we reach litter
+                if (nextCell == 'L') {
+
+                    int id = litterId[newRow][newCol];
+
+                    // Mark this litter as collected
+                    newMask = newMask | (1 << id);
+                }
+
+                // If we reach reset area
+                if (nextCell == 'R') {
+                    newEnergy = energy;
+                }
+
+                // If this state has not been visited
+                if (!visited[newRow][newCol][newMask][newEnergy]) {
+
+                    visited[newRow][newCol][newMask][newEnergy] = true;
+
+                    queue.offer(
+                            new State(
+                                    newRow,
+                                    newCol,
+                                    newMask,
+                                    newEnergy,
+                                    moves + 1
+                            )
+                    );
+                }
+            }
+        }
+
+        // Impossible to collect all litter
+        return -1;
+    }
+}
