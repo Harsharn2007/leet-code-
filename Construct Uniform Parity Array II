@@ -1,0 +1,21 @@
+#include <vector>
+#include <algorithm>
+#include <climits>
+
+class Solution {
+public:
+    bool uniformArray(std::vector<int>& nums1) {
+        int minVal = INT_MAX;
+        bool hasEven = false;
+        bool hasOdd = false;
+
+        for (int num : nums1) {
+            minVal = std::min(minVal, num);
+            if (num % 2 == 0) hasEven = true;
+            else hasOdd = true;
+        }
+
+        if (!hasEven || !hasOdd) return true;
+        return minVal % 2 != 0;
+    }
+};
