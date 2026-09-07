@@ -1,0 +1,24 @@
+class Solution {
+    public int distinctSubseqII(String s) {
+        final long MOD = 1000000007;
+
+        long total = 1; // empty subsequence
+
+        long[] last = new long[26];
+
+        for (char ch : s.toCharArray()) {
+            int index = ch - 'a';
+
+            long newSubsequences = total;
+
+            // Add subsequences ending with current character
+            total = (total + newSubsequences - last[index] + MOD) % MOD;
+
+            // Remember what was previously added for this character
+            last[index] = newSubsequences;
+        }
+
+        // Remove empty subsequence
+        return (int) ((total - 1 + MOD) % MOD);
+    }
+}
