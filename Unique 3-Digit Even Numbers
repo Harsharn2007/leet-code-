@@ -1,0 +1,42 @@
+class Solution {
+    public int totalNumbers(int[] digits) {
+        int[] count = new int[10];
+
+        // Count frequency of each digit
+        for (int digit : digits) {
+            count[digit]++;
+        }
+
+        int answer = 0;
+
+        // Check every 3-digit even number
+        for (int num = 100; num <= 998; num += 2) {
+            int n = num;
+
+            int a = n / 100;        // hundreds digit
+            int b = (n / 10) % 10;  // tens digit
+            int c = n % 10;         // units digit
+
+            // Check if required copies are available
+            int[] needed = new int[10];
+            needed[a]++;
+            needed[b]++;
+            needed[c]++;
+
+            boolean possible = true;
+
+            for (int d = 0; d <= 9; d++) {
+                if (needed[d] > count[d]) {
+                    possible = false;
+                    break;
+                }
+            }
+
+            if (possible) {
+                answer++;
+            }
+        }
+
+        return answer;
+    }
+}
