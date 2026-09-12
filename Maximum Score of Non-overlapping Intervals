@@ -1,0 +1,63 @@
+from bisect import bisect_right
+
+class Solution:
+    def maximumWeight(self, intervals):
+        n = len(intervals)
+
+        # Add original index
+        arr = []
+        for i in range(n):
+            l, r, w = intervals[i]
+            arr.append((l, r, w, i))
+
+        # Sort by starting position
+        arr.sort()
+
+        starts = [x[0] for x in arr]
+
+        # Find the next non-overlapping interval
+        nxt = [0] * n
+
+        for i in range(n):
+            r = arr[i][1]
+            nxt[i] = bisect_right(starts, r)
+
+        memo = {}
+
+        def better(a, b):
+            # a and b = (score, indices)
+
+            if a[0] > b[0]:
+                return a
+
+            if a[0] < b[0]:
+                return b
+
+            # Same score -> lexicographically smaller indices
+            return a if a[1] < b[1] else b
+
+        def dp(i, k):
+            if i >= n or k == 0:
+                return (0, ())
+
+            if (i, k) in memo:
+                return memo[(i, k)]
+
+            # Option 1: Don't take this interval
+            skip = dp(i + 1, k)
+
+            # Option 2: Take this interval
+            next_score, next_indices = dp(nxt[i], k - 1)
+
+            current_index = arr[i][3]
+
+            take = (
+                arr[i][2] + next_score,
+                tuple(sorted(next_indices + (current_index,)))
+            )
+
+            memo[(i, k)] = better(skip, take)
+
+            return memo[(i, k)]
+
+        return list(dp(0, 4)[1])
