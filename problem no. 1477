@@ -1,0 +1,42 @@
+#include <bits/stdc++.h>
+using namespace std;
+
+class Solution {
+public:
+    int minSumOfLengths(vector<int>& arr, int target) {
+        int n = arr.size();
+        const int INF = 1e9;
+
+        unordered_map<long long, int> prefix;
+        prefix[0] = -1;
+
+        vector<int> best(n, INF);
+
+        long long sum = 0;
+        int minLength = INF;
+        int answer = INF;
+
+        for (int i = 0; i < n; i++) {
+            sum += arr[i];
+
+            // Check whether a subarray ending at i has sum = target
+            if (prefix.find(sum - target) != prefix.end()) {
+                int start = prefix[sum - target] + 1;
+                int length = i - start + 1;
+
+                // Combine with the shortest previous non-overlapping subarray
+                if (start > 0 && best[start - 1] != INF) {
+                    answer = min(answer, length + best[start - 1]);
+                }
+
+                minLength = min(minLength, length);
+            }
+
+            best[i] = minLength;
+
+            prefix[sum] = i;
+        }
+
+        return answer == INF ? -1 : answer;
+    }
+};
