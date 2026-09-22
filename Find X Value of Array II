@@ -1,0 +1,201 @@
+class Solution {
+
+    static class Node {
+        long[] pref;
+        long[] suff;
+        long[] cnt;
+        int prod;
+
+        Node(int k) {
+            pref = new long[k];
+            suff = new long[k];
+            cnt = new long[k];
+        }
+    }
+
+    int n, k;
+    Node[] tree;
+
+    // Create a node for one element
+    Node makeNode(int value) {
+        Node node = new Node(k);
+
+        int r = value % k;
+
+        node.prod = r;
+
+        // The only prefix
+        node.pref[r] = 1;
+
+        // The only suffix
+        node.suff[r] = 1;
+
+        // The only subarray
+        node.cnt[r] = 1;
+
+        return node;
+    }
+
+    Node merge(Node left, Node right) {
+
+        Node res = new Node(k);
+
+        // Product of complete segment
+        res.prod = (left.prod * right.prod) % k;
+
+        /*
+         * Prefixes:
+         *
+         * 1. Prefix lies completely in left
+         * 2. Prefix contains all of left + a prefix of right
+         */
+        for (int r = 0; r < k; r++) {
+            res.pref[r] += left.pref[r];
+        }
+
+        for (int a = 0; a < k; a++) {
+            if (left.prod == a) {
+                for (int b = 0; b < k; b++) {
+                    int r = (a * b) % k;
+                    res.pref[r] += right.pref[b];
+                }
+            }
+        }
+
+        /*
+         * Suffixes:
+         *
+         * 1. Suffix lies completely in right
+         * 2. Suffix contains all of right + a suffix of left
+         */
+        for (int r = 0; r < k; r++) {
+            res.suff[r] += right.suff[r];
+        }
+
+        for (int a = 0; a < k; a++) {
+            if (right.prod == a) {
+                for (int b = 0; b < k; b++) {
+                    int r = (b * a) % k;
+                    res.suff[r] += left.suff[b];
+                }
+            }
+        }
+
+        // Subarrays completely inside left/right
+        for (int r = 0; r < k; r++) {
+            res.cnt[r] += left.cnt[r];
+            res.cnt[r] += right.cnt[r];
+        }
+
+        /*
+         * Cross subarrays:
+         * suffix of left + prefix of right
+         */
+        for (int a = 0; a < k; a++) {
+            for (int b = 0; b < k; b++) {
+                int r = (a * b) % k;
+
+                res.cnt[r] += left.suff[a] * right.pref[b];
+            }
+        }
+
+        return res;
+    }
+
+    void build(int idx, int l, int r, int[] nums) {
+
+        if (l == r) {
+            tree[idx] = makeNode(nums[l]);
+            return;
+        }
+
+        int mid = l + (r - l) / 2;
+
+        build(idx * 2, l, mid, nums);
+        build(idx * 2 + 1, mid + 1, r, nums);
+
+        tree[idx] = merge(tree[idx * 2], tree[idx * 2 + 1]);
+    }
+
+    void update(int idx, int l, int r, int pos, int value) {
+
+        if (l == r) {
+            tree[idx] = makeNode(value);
+            return;
+        }
+
+        int mid = l + (r - l) / 2;
+
+        if (pos <= mid) {
+            update(idx * 2, l, mid, pos, value);
+        } else {
+            update(idx * 2 + 1, mid + 1, r, pos, value);
+        }
+
+        tree[idx] = merge(tree[idx * 2], tree[idx * 2 + 1]);
+    }
+
+    Node query(int idx, int l, int r, int ql, int qr) {
+
+        if (ql <= l && r <= qr) {
+            return tree[idx];
+        }
+
+        int mid = l + (r - l) / 2;
+
+        if (qr <= mid) {
+            return query(idx * 2, l, mid, ql, qr);
+        }
+
+        if (ql > mid) {
+            return query(idx * 2 + 1, mid + 1, r, ql, qr);
+        }
+
+        Node left = query(idx * 2, l, mid, ql, qr);
+        Node right = query(idx * 2 + 1, mid + 1, r, ql, qr);
+
+        return merge(left, right);
+    }
+
+    public int[] resultArray(int[] nums, int k, int[][] queries) {
+
+        this.n = nums.length;
+        this.k = k;
+
+        tree = new Node[4 * n];
+
+        build(1, 0, n - 1, nums);
+
+        int[] ans = new int[queries.length];
+
+        for (int i = 0; i < queries.length; i++) {
+
+            int index = queries[i][0];
+            int value = queries[i][1];
+            int start = queries[i][2];
+            int x = queries[i][3];
+
+            // Persistent update
+            update(1, 0, n - 1, index, value);
+
+            /*
+             * After removing nums[0 .. start-1],
+             * we work with nums[start .. n-1].
+             *
+             * Valid remaining arrays are:
+             *
+             * nums[start .. start]
+             * nums[start .. start+1]
+             * ...
+             * nums[start .. n-1]
+             *
+             * These are exactly the PREFIXES of this range.
+             */
+            Node range = query(1, 0, n - 1, start, n - 1);
+
+            ans[i] = (int) range.pref[x];
+        }
+
+        return ans;
+    }
+}
