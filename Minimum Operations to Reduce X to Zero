@@ -1,0 +1,51 @@
+class Solution {
+    public int minOperations(int[] nums, int x) {
+        int n = nums.length;
+
+        // Calculate total sum
+        long totalSum = 0;
+        for (int num : nums) {
+            totalSum += num;
+        }
+
+        // We need to keep a subarray with this sum
+        long target = totalSum - x;
+
+        // If target is negative, impossible
+        if (target < 0) {
+            return -1;
+        }
+
+        // If target is 0, remove all elements
+        if (target == 0) {
+            return n;
+        }
+
+        int left = 0;
+        long windowSum = 0;
+        int maxLength = -1;
+
+        // Sliding window
+        for (int right = 0; right < n; right++) {
+            windowSum += nums[right];
+
+            // Shrink window if sum becomes too large
+            while (windowSum > target && left <= right) {
+                windowSum -= nums[left];
+                left++;
+            }
+
+            // Check if current window has target sum
+            if (windowSum == target) {
+                maxLength = Math.max(maxLength, right - left + 1);
+            }
+        }
+
+        // No valid subarray found
+        if (maxLength == -1) {
+            return -1;
+        }
+
+        return n - maxLength;
+    }
+}
