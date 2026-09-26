@@ -1,0 +1,45 @@
+class Solution {
+    public int minimumCost(int x, int s, int m, int l,
+                           int cs, int cm, int cl) {
+
+        int maxArea = x + l;
+        int[] dp = new int[maxArea + 1];
+
+        // Initialize
+        for (int i = 1; i <= maxArea; i++) {
+            dp[i] = Integer.MAX_VALUE;
+        }
+
+        dp[0] = 0;
+
+        for (int area = 1; area <= maxArea; area++) {
+
+            // Small pizza
+            if (area >= s && dp[area - s] != Integer.MAX_VALUE) {
+                dp[area] = Math.min(dp[area],
+                                    dp[area - s] + cs);
+            }
+
+            // Medium pizza
+            if (area >= m && dp[area - m] != Integer.MAX_VALUE) {
+                dp[area] = Math.min(dp[area],
+                                    dp[area - m] + cm);
+            }
+
+            // Large pizza
+            if (area >= l && dp[area - l] != Integer.MAX_VALUE) {
+                dp[area] = Math.min(dp[area],
+                                    dp[area - l] + cl);
+            }
+        }
+
+        // We need total area >= x
+        int answer = Integer.MAX_VALUE;
+
+        for (int area = x; area <= maxArea; area++) {
+            answer = Math.min(answer, dp[area]);
+        }
+
+        return answer;
+    }
+}
