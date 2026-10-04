@@ -1,0 +1,35 @@
+class Solution {
+    public boolean checkValidString(String s) {
+        int minOpen = 0;
+        int maxOpen = 0;
+
+        for (char c : s.toCharArray()) {
+
+            if (c == '(') {
+                minOpen++;
+                maxOpen++;
+            } 
+            else if (c == ')') {
+                minOpen--;
+                maxOpen--;
+            } 
+            else { // '*'
+                // '*' can be ')' or '(' or empty
+                minOpen--;  // Treat '*' as ')'
+                maxOpen++;  // Treat '*' as '('
+            }
+
+            // Too many ')' characters
+            if (maxOpen < 0) {
+                return false;
+            }
+
+            // We cannot have fewer than 0 unmatched '('
+            minOpen = Math.max(minOpen, 0);
+        }
+
+        // If minimum possible unmatched '(' is 0,
+        // we can make the string valid.
+        return minOpen == 0;
+    }
+}
