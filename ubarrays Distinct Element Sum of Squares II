@@ -1,0 +1,69 @@
+
+class Solution {
+    public int sumCounts(int[] nums) {
+        final long MOD = 1_000_000_007L;
+        int n = nums.length;
+
+        long[] count = new long[4 * n];
+        long[] squares = new long[4 * n];
+        long[] lazy = new long[4 * n];
+
+        java.util.HashMap<Integer, Integer> last = new java.util.HashMap<>();
+        long ans = 0;
+
+        for (int i = 0; i < n; i++) {
+            int prev = last.getOrDefault(nums[i], -1);
+
+            update(1, 0, n - 1, prev + 1, i, 1, count, squares, lazy, MOD);
+
+            ans = (ans + squares[1]) % MOD;
+            last.put(nums[i], i);
+        }
+
+        return (int) ans;
+    }
+
+    private void update(int node, int start, int end,
+                        int l, int r, long val,
+                        long[] count, long[] squares, long[] lazy,
+                        long MOD) {
+        if (l > end || r < start) return;
+
+        if (l <= start && end <= r) {
+            squares[node] = (squares[node] + 2 * val * count[node] + val * val * (end - start + 1)) % MOD;
+            count[node] = (count[node] + val * (end - start + 1)) % MOD;
+            lazy[node] = (lazy[node] + val) % MOD;
+            return;
+        }
+
+        push(node, start, end, count, squares, lazy, MOD);
+
+        int mid = (start + end) / 2;
+        update(node * 2, start, mid, l, r, val, count, squares, lazy, MOD);
+        update(node * 2 + 1, mid + 1, end, l, r, val, count, squares, lazy, MOD);
+
+        count[node] = (count[node * 2] + count[node * 2 + 1]) % MOD;
+        squares[node] = (squares[node * 2] + squares[node * 2 + 1]) % MOD;
+    }
+
+    private void push(int node, int start, int end,
+                      long[] count, long[] squares, long[] lazy,
+                      long MOD) {
+        if (lazy[node] == 0 || start == end) return;
+
+        int mid = (start + end) / 2;
+        apply(node * 2, start, mid, lazy[node], count, squares, lazy, MOD);
+        apply(node * 2 + 1, mid + 1, end, lazy[node], count, squares, lazy, MOD);
+
+        lazy[node] = 0;
+    }
+
+    private void apply(int node, int start, int end, long val,
+                       long[] count, long[] squares, long[] lazy,
+                       long MOD) {
+        squares[node] = (squares[node] + 2 * val * count[node]
+                        + val * val * (end - start + 1)) % MOD;
+        count[node] = (count[node] + val * (end - start + 1)) % MOD;
+        lazy[node] = (lazy[node] + val) % MOD;
+    }
+}
