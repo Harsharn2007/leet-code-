@@ -1,0 +1,29 @@
+class Solution {
+    public int countDaysTogether(String arriveAlice, String leaveAlice,
+                                 String arriveBob, String leaveBob) {
+
+        int[] months = {31, 28, 31, 30, 31, 30,
+                        31, 31, 30, 31, 30, 31};
+
+        int aliceStart = getDay(arriveAlice, months);
+        int aliceEnd = getDay(leaveAlice, months);
+        int bobStart = getDay(arriveBob, months);
+        int bobEnd = getDay(leaveBob, months);
+
+        int start = Math.max(aliceStart, bobStart);
+        int end = Math.min(aliceEnd, bobEnd);
+
+        return Math.max(0, end - start + 1);
+    }
+
+    private int getDay(String date, int[] months) {
+        int month = Integer.parseInt(date.substring(0, 2));
+        int day = Integer.parseInt(date.substring(3, 5));
+
+        for (int i = 0; i < month - 1; i++) {
+            day += months[i];
+        }
+
+        return day;
+    }
+}
