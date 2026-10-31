@@ -1,0 +1,62 @@
+
+class Solution {
+    static final int MOD = 1_000_000_007;
+
+    public int uniquePaths(int[][] grid) {
+        int m = grid.length;
+        int n = grid[0].length;
+
+        // right[i][j]: ways entering cell (i,j) from the left
+        // down[i][j]: ways entering cell (i,j) from above
+        long[][] right = new long[m][n];
+        long[][] down = new long[m][n];
+
+        // Start at (0,0)
+        right[0][0] = 1;
+
+        for (int i = 0; i < m; i++) {
+            for (int j = 0; j < n; j++) {
+
+                long horizontal = right[i][j];
+                long vertical = down[i][j];
+
+                if (grid[i][j] == 1) {
+
+                    // Mirror:
+                    // Entering horizontally -> move down
+                    if (i + 1 < m) {
+                        down[i + 1][j] =
+                            (down[i + 1][j] + horizontal) % MOD;
+                    }
+
+                    // Entering vertically -> move right
+                    if (j + 1 < n) {
+                        right[i][j + 1] =
+                            (right[i][j + 1] + vertical) % MOD;
+                    }
+
+                } else {
+
+                    // Empty cell: both incoming directions
+                    // can independently choose right or down.
+                    long ways = (horizontal + vertical) % MOD;
+
+                    if (j + 1 < n) {
+                        right[i][j + 1] =
+                            (right[i][j + 1] + ways) % MOD;
+                    }
+
+                    if (i + 1 < m) {
+                        down[i + 1][j] =
+                            (down[i + 1][j] + ways) % MOD;
+                    }
+                }
+            }
+        }
+
+        // Destination is guaranteed to be an empty cell.
+        return (int) (
+            (right[m - 1][n - 1] + down[m - 1][n - 1]) % MOD
+        );
+    }
+}
