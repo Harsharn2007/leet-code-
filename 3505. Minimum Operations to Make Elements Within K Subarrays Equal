@@ -1,0 +1,137 @@
+
+import java.util.*;
+
+class Solution {
+
+    static class SlidingMedian {
+        TreeMap<Integer, Integer> low = new TreeMap<>();
+        TreeMap<Integer, Integer> high = new TreeMap<>();
+
+        int lowSize = 0, highSize = 0;
+        long lowSum = 0, highSum = 0;
+
+        void add(int val) {
+            if (low.isEmpty() || val <= low.lastKey()) {
+                low.put(val, low.getOrDefault(val, 0) + 1);
+                lowSize++;
+                lowSum += val;
+            } else {
+                high.put(val, high.getOrDefault(val, 0) + 1);
+                highSize++;
+                highSum += val;
+            }
+            balance();
+        }
+
+        void remove(int val) {
+            if (low.containsKey(val)) {
+                removeValue(low, val);
+                lowSize--;
+                lowSum -= val;
+            } else {
+                removeValue(high, val);
+                highSize--;
+                highSum -= val;
+            }
+            balance();
+        }
+
+        void removeValue(TreeMap<Integer, Integer> map, int val) {
+            int count = map.get(val);
+
+            if (count == 1) {
+                map.remove(val);
+            } else {
+                map.put(val, count - 1);
+            }
+        }
+
+        void balance() {
+            int target = (lowSize + highSize + 1) / 2;
+
+            while (lowSize > target) {
+                int val = low.lastKey();
+
+                removeValue(low, val);
+                lowSize--;
+                lowSum -= val;
+
+                high.put(val, high.getOrDefault(val, 0) + 1);
+                highSize++;
+                highSum += val;
+            }
+
+            while (lowSize < target) {
+                int val = high.firstKey();
+
+                removeValue(high, val);
+                highSize--;
+                highSum -= val;
+
+                low.put(val, low.getOrDefault(val, 0) + 1);
+                lowSize++;
+                lowSum += val;
+            }
+        }
+
+        long getCost() {
+            int median = low.lastKey();
+
+            return (long) median * lowSize - lowSum
+                 + highSum - (long) median * highSize;
+        }
+    }
+
+    public long minOperations(int[] nums, int x, int k) {
+
+        int n = nums.length;
+
+        // Step 1: Calculate cost of every window of size x
+        long[] cost = new long[n - x + 1];
+
+        SlidingMedian median = new SlidingMedian();
+
+        for (int i = 0; i < n; i++) {
+
+            median.add(nums[i]);
+
+            if (i >= x) {
+                median.remove(nums[i - x]);
+            }
+
+            if (i >= x - 1) {
+                cost[i - x + 1] = median.getCost();
+            }
+        }
+
+        // Step 2: Dynamic Programming
+        long INF = Long.MAX_VALUE / 4;
+
+        long[] prev = new long[n + 1];
+        Arrays.fill(prev, 0);
+
+        for (int j = 1; j <= k; j++) {
+
+            long[] curr = new long[n + 1];
+            Arrays.fill(curr, INF);
+
+            for (int i = 1; i <= n; i++) {
+
+                // Option 1: Skip current element
+                curr[i] = curr[i - 1];
+
+                // Option 2: Select a window of size x
+                if (i >= x && prev[i - x] != INF) {
+
+                    long take = prev[i - x] + cost[i - x];
+
+                    curr[i] = Math.min(curr[i], take);
+                }
+            }
+
+            prev = curr;
+        }
+
+        return prev[n];
+    }
+}
