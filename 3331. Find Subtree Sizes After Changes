@@ -1,0 +1,96 @@
+
+import java.util.*;
+
+class Solution {
+    public int[] findSubtreeSizes(int[] parent, String s) {
+
+        int n = parent.length;
+
+        List<Integer>[] tree = new ArrayList[n];
+        List<Integer>[] newTree = new ArrayList[n];
+
+        for (int i = 0; i < n; i++) {
+            tree[i] = new ArrayList<>();
+            newTree[i] = new ArrayList<>();
+        }
+
+        // Build original tree
+        for (int i = 1; i < n; i++) {
+            tree[parent[i]].add(i);
+        }
+
+        int[] newParent = new int[n];
+        int[] last = new int[26];
+        int[] previous = new int[n];
+
+        Arrays.fill(last, -1);
+
+        // First DFS: Find new parents
+        Stack<Integer> st = new Stack<>();
+        st.push(0);
+
+        while (!st.isEmpty()) {
+
+            int event = st.pop();
+
+            if (event < 0) {
+                int node = -event - 1;
+                last[s.charAt(node) - 'a'] = previous[node];
+                continue;
+            }
+
+            int node = event;
+            int c = s.charAt(node) - 'a';
+
+            previous[node] = last[c];
+
+            newParent[node] = last[c] != -1
+                    ? last[c]
+                    : parent[node];
+
+            last[c] = node;
+
+            st.push(-node - 1);
+
+            for (int i = tree[node].size() - 1; i >= 0; i--) {
+                st.push(tree[node].get(i));
+            }
+        }
+
+        // Build modified tree
+        for (int i = 1; i < n; i++) {
+            newTree[newParent[i]].add(i);
+        }
+
+        // Second DFS: Get traversal order
+        int[] order = new int[n];
+        int size = 0;
+
+        st.push(0);
+
+        while (!st.isEmpty()) {
+
+            int node = st.pop();
+            order[size++] = node;
+
+            for (int child : newTree[node]) {
+                st.push(child);
+            }
+        }
+
+        // Calculate subtree sizes
+        int[] ans = new int[n];
+        Arrays.fill(ans, 1);
+
+        for (int i = size - 1; i >= 0; i--) {
+
+            int node = order[i];
+
+            if (newParent[node] != -1) {
+                ans[newParent[node]] += ans[node];
+            }
+        }
+
+        return ans;
+    }
+}
