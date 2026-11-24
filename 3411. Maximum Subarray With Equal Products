@@ -1,0 +1,47 @@
+
+import java.math.BigInteger;
+
+class Solution {
+
+    public int maxLength(int[] nums) {
+        int n = nums.length;
+        int maxLen = 0;
+
+        for (int i = 0; i < n; i++) {
+            BigInteger product = BigInteger.ONE;
+            int gcd = 0;
+            int lcm = 1;
+
+            for (int j = i; j < n; j++) {
+                int x = nums[j];
+
+                // Calculate product
+                product = product.multiply(BigInteger.valueOf(x));
+
+                // Calculate GCD
+                gcd = findGCD(gcd, x);
+
+                // Calculate LCM
+                lcm = (lcm / findGCD(lcm, x)) * x;
+
+                // Check product == GCD * LCM
+                BigInteger expected = BigInteger.valueOf((long) gcd * lcm);
+
+                if (product.equals(expected)) {
+                    maxLen = Math.max(maxLen, j - i + 1);
+                }
+            }
+        }
+
+        return maxLen;
+    }
+
+    private int findGCD(int a, int b) {
+        while (b != 0) {
+            int temp = b;
+            b = a % b;
+            a = temp;
+        }
+        return a;
+    }
+}
