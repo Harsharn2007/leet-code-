@@ -1,0 +1,158 @@
+
+import java.util.*;
+
+class Solution {
+
+    public int smallestUniqueSubarray(int[] nums) {
+        int n = nums.length;
+        int N = n + 1;
+
+        int[] a = new int[N];
+
+        for (int i = 0; i < n; i++) {
+            a[i] = nums[i];
+        }
+
+        a[n] = 0;
+
+        // Build Suffix Array
+        int[] sa = new int[N];
+        int[] c = new int[N];
+        int[] cnt = new int[Math.max(N, 100001)];
+
+        for (int x : a) {
+            cnt[x]++;
+        }
+
+        for (int i = 1; i < cnt.length; i++) {
+            cnt[i] += cnt[i - 1];
+        }
+
+        for (int i = N - 1; i >= 0; i--) {
+            sa[--cnt[a[i]]] = i;
+        }
+
+        c[sa[0]] = 0;
+        int classes = 1;
+
+        for (int i = 1; i < N; i++) {
+            if (a[sa[i]] != a[sa[i - 1]]) {
+                classes++;
+            }
+            c[sa[i]] = classes - 1;
+        }
+
+        int[] pn = new int[N];
+        int[] cn = new int[N];
+
+        for (int len = 1; len < N; len *= 2) {
+
+            for (int i = 0; i < N; i++) {
+                pn[i] = sa[i] - len;
+
+                if (pn[i] < 0) {
+                    pn[i] += N;
+                }
+            }
+
+            Arrays.fill(cnt, 0);
+
+            for (int i = 0; i < N; i++) {
+                cnt[c[pn[i]]]++;
+            }
+
+            for (int i = 1; i < classes; i++) {
+                cnt[i] += cnt[i - 1];
+            }
+
+            for (int i = N - 1; i >= 0; i--) {
+                int x = pn[i];
+                sa[--cnt[c[x]]] = x;
+            }
+
+            cn[sa[0]] = 0;
+            int newClasses = 1;
+
+            for (int i = 1; i < N; i++) {
+                int cur = sa[i];
+                int prev = sa[i - 1];
+
+                int mid1 = (cur + len) % N;
+                int mid2 = (prev + len) % N;
+
+                if (c[cur] != c[prev] ||
+                    c[mid1] != c[mid2]) {
+                    newClasses++;
+                }
+
+                cn[cur] = newClasses - 1;
+            }
+
+            int[] temp = c;
+            c = cn;
+            cn = temp;
+
+            classes = newClasses;
+
+            if (classes == N) {
+                break;
+            }
+        }
+
+        // Build inverse suffix array
+        int[] rank = new int[N];
+
+        for (int i = 0; i < N; i++) {
+            rank[sa[i]] = i;
+        }
+
+        // Calculate LCP using Kasai's algorithm
+        int[] lcp = new int[N];
+        int k = 0;
+
+        for (int i = 0; i < n; i++) {
+
+            int r = rank[i];
+
+            if (r == 0) {
+                k = 0;
+                continue;
+            }
+
+            int j = sa[r - 1];
+
+            while (i + k < n &&
+                   j + k < n &&
+                   nums[i + k] == nums[j + k]) {
+                k++;
+            }
+
+            lcp[r] = k;
+
+            if (k > 0) {
+                k--;
+            }
+        }
+
+        // Find minimum unique subarray length
+        int ans = n;
+
+        for (int i = 0; i < n; i++) {
+
+            int r = rank[i];
+
+            int left = lcp[r];
+
+            int right = (r + 1 < N) ? lcp[r + 1] : 0;
+
+            int len = Math.max(left, right) + 1;
+
+            // IMPORTANT: subarray must fit inside nums
+            if (len <= n - i) {
+                ans = Math.min(ans, len);
+            }
+        }
+
+        return ans;
+    }
+}
